@@ -1,0 +1,9 @@
+name: AdvancedAntiKillAura
+version: '1.0-SNAPSHOT'
+author: "Andreas Karageorgos"
+main: plugins.karageorgos.me.advancedAntiKillAura.AdvancedAntiKillAura
+api-version: '1.20'
+description: A simple kill aura protection
+permissions:
+  antikillaura.ignore:
+    default: op
