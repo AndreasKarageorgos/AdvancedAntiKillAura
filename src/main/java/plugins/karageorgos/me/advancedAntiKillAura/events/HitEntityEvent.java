@@ -13,8 +13,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import plugins.karageorgos.me.advancedAntiKillAura.AdvancedAntiKillAura;
 
 import java.util.ArrayList;
@@ -30,7 +28,6 @@ public class HitEntityEvent implements Listener {
     private AdvancedAntiKillAura plugin;
     private Location playersLocation;
     private Location entityLocation;
-    private final PotionEffect invisibility = new PotionEffect(PotionEffectType.INVISIBILITY, 1 ,10);
 
     public HitEntityEvent(AdvancedAntiKillAura plugin){
         this.plugin = plugin;
@@ -60,7 +57,6 @@ public class HitEntityEvent implements Listener {
         entityLocation.setY(playersLocation.getY() + (Math.abs(rand.nextInt())+1) % 2);
 
         Zombie zombie = (Zombie) player.getWorld().spawnEntity(entityLocation, EntityType.ZOMBIE);
-        zombie.addPotionEffect(invisibility);
         zombie.setCustomName(playersAndNames.get(player));
         zombie.setAI(false);
         zombie.setSilent(true);
@@ -72,7 +68,7 @@ public class HitEntityEvent implements Listener {
 
 
 
-        Bukkit.getScheduler().runTaskLater(plugin, zombie::remove, 60L); //Removes the entity.
+        Bukkit.getScheduler().runTaskLater(plugin, zombie::remove, 20L); //Removes the entity.
 
         if(entityDamageByEntityEvent.getEntity() instanceof Zombie){
             if(((Zombie) entityDamageByEntityEvent.getEntity()).getName().equals(playersAndNames.get(player))){
