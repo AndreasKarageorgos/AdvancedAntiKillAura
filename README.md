@@ -5,7 +5,7 @@ AdvancedAntiKillAura is a powerful and sophisticated Minecraft spigot plugin des
 
 ## Installation
 
-1. Download the `AdvancedAntiKillAura.jar` from [here]()
+1. Download the `AdvancedAntiKillAura.jar` from [here](https://www.spigotmc.org/resources/advancedantikillaura.118365/)
 
 2. Add the `.jar` file into your plugins folder.
 
