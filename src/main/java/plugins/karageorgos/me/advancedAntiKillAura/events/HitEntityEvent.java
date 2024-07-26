@@ -1,18 +1,18 @@
 package plugins.karageorgos.me.advancedAntiKillAura.events;
 
-import org.bukkit.BanList;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Sheep;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import plugins.karageorgos.me.advancedAntiKillAura.AdvancedAntiKillAura;
@@ -30,7 +30,6 @@ public class HitEntityEvent implements Listener {
     private AdvancedAntiKillAura plugin;
     private Location playersLocation;
     private Location entityLocation;
-    private Sheep sheep;
     private final PotionEffect invisibility = new PotionEffect(PotionEffectType.INVISIBILITY, 1 ,10);
 
     public HitEntityEvent(AdvancedAntiKillAura plugin){
@@ -58,18 +57,26 @@ public class HitEntityEvent implements Listener {
 
         playersLocation = player.getLocation();
         entityLocation = playersLocation.clone().add(playersLocation.getDirection().multiply(-2));
-        entityLocation.setY(playersLocation.getY());
+        entityLocation.setY(playersLocation.getY() + (Math.abs(rand.nextInt())+1) % 2);
 
-        sheep = (Sheep) player.getWorld().spawnEntity(entityLocation, EntityType.SHEEP);
-        sheep.addPotionEffect(invisibility);
-        sheep.setCustomName(playersAndNames.get(player));
-        sheep.setAI(false);
-        sheep.setSilent(true);
-        //Bukkit.getScheduler().runTaskLater(plugin, sheep::remove, 20L); //Removes the sheep after 1 second.
+        Zombie zombie = (Zombie) player.getWorld().spawnEntity(entityLocation, EntityType.ZOMBIE);
+        zombie.addPotionEffect(invisibility);
+        zombie.setCustomName(playersAndNames.get(player));
+        zombie.setAI(false);
+        zombie.setSilent(true);
+        zombie.setVisualFire(false);
+        zombie.setInvulnerable(true);
+        zombie.setInvisible(true);
+        zombie.setAdult();
+        zombie.setMetadata("NoBurn", new FixedMetadataValue(plugin, true));
 
-        if(entityDamageByEntityEvent.getEntity() instanceof Sheep){
-            if(((Sheep) entityDamageByEntityEvent.getEntity()).getName().equals(playersAndNames.get(player))){
-                sheep.remove();
+
+
+        Bukkit.getScheduler().runTaskLater(plugin, zombie::remove, 60L); //Removes the entity.
+
+        if(entityDamageByEntityEvent.getEntity() instanceof Zombie){
+            if(((Zombie) entityDamageByEntityEvent.getEntity()).getName().equals(playersAndNames.get(player))){
+                entityDamageByEntityEvent.getEntity().remove();
                 keepAnEye(player);
             }
         }
@@ -78,11 +85,26 @@ public class HitEntityEvent implements Listener {
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
 
-        if (event.getEntity() instanceof Sheep) {
-            Sheep sheep = (Sheep) event.getEntity();
-            if (sheep.getCustomName() != null && entityNames.contains(sheep.getCustomName())) {
-                event.setCancelled(true); // Cancel any damage to the sheep
-                entityNames.remove(sheep.getCustomName());
+        if (event.getEntity() instanceof Zombie) {
+            Zombie zombie = (Zombie) event.getEntity();
+            if (zombie.getCustomName() != null && entityNames.contains(zombie.getCustomName())) {
+                event.setCancelled(true); // Cancel any damage to the entity
+                entityNames.remove(zombie.getCustomName());
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityCombust(EntityCombustEvent event) {
+        if (event.getEntity() instanceof Zombie) {
+            Zombie zombie = (Zombie) event.getEntity();
+            if (zombie.hasMetadata("NoBurn")) {
+                for (MetadataValue value : zombie.getMetadata("NoBurn")) {
+                    if (value.asBoolean()) {
+                        event.setCancelled(true);
+                        break;
+                    }
+                }
             }
         }
     }
