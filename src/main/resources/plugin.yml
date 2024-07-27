@@ -7,3 +7,5 @@ description: A simple kill aura protection
 permissions:
   antikillaura.ignore:
     default: op
+softdepend:
+  - Essentials

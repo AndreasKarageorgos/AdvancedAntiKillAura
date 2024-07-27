@@ -1,4 +1,4 @@
-package plugins.karageorgos.me.advancedAntiKillAura.events;
+package plugins.karageorgos.me.advancedAntiKillAura.core;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -13,27 +13,32 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
+import org.bukkit.util.Vector;
 import plugins.karageorgos.me.advancedAntiKillAura.AdvancedAntiKillAura;
+import plugins.karageorgos.me.advancedAntiKillAura.helpers.Punishment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-public class HitEntityEvent implements Listener {
+public class HiddenTargetsTrap implements Listener {
     private final Random rand = new Random();
-    private final String letters = "qwertyuiopasdfghjklzxcvbnm";
+    private final String letters = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
     private HashMap<Player,String> playersAndNames;
     private HashMap<Player,Integer> playerStrikes;
     private ArrayList<String> entityNames;
     private AdvancedAntiKillAura plugin;
     private Location playersLocation;
     private Location entityLocation;
+    private boolean lock;
 
-    public HitEntityEvent(AdvancedAntiKillAura plugin){
+
+    public HiddenTargetsTrap(AdvancedAntiKillAura plugin){
         this.plugin = plugin;
         playerStrikes = new HashMap<Player, Integer>();
         playersAndNames = plugin.playersAndNames;
         entityNames = plugin.entityNames;
+        lock = false;
     }
 
 
@@ -50,10 +55,27 @@ public class HitEntityEvent implements Listener {
             String randomName = generateRandomName();
             playersAndNames.put(player, randomName);
             entityNames.add(randomName);
+        }else{
+            entityNames.add(playersAndNames.get(player));
         }
 
+
+
         playersLocation = player.getLocation();
-        entityLocation = playersLocation.clone().add(playersLocation.getDirection().multiply(-2));
+
+        Vector playerDirection = playersLocation.getDirection();
+
+        // Calculate the vectors pointing to the left and right of the player
+        Vector left = playerDirection.clone().rotateAroundY(-Math.PI / 2);
+        Vector right = playerDirection.clone().rotateAroundY(Math.PI / 2);
+
+
+        // Choose randomly between left and right vectors
+        Vector chosenDirection = rand.nextBoolean() ? left : right;
+
+        // Calculate the new location for the entity
+
+        entityLocation = playersLocation.clone().add(playerDirection.multiply(-2)).add(chosenDirection.multiply(2));
         entityLocation.setY(playersLocation.getY() + (Math.abs(rand.nextInt())+1) % 2);
 
         Zombie zombie = (Zombie) player.getWorld().spawnEntity(entityLocation, EntityType.ZOMBIE);
@@ -84,11 +106,15 @@ public class HitEntityEvent implements Listener {
         if (event.getEntity() instanceof Zombie) {
             Zombie zombie = (Zombie) event.getEntity();
             if (zombie.getCustomName() != null && entityNames.contains(zombie.getCustomName())) {
-                event.setCancelled(true); // Cancel any damage to the entity
-                entityNames.remove(zombie.getCustomName());
+                // Cancel any damage to the entity
+                event.setDamage(0);
+                event.setCancelled(true);
+                //removes the entity from the arrayList.
+                safeRemove(zombie.getCustomName());
             }
         }
     }
+
 
     @EventHandler
     public void onEntityCombust(EntityCombustEvent event) {
@@ -103,6 +129,25 @@ public class HitEntityEvent implements Listener {
                 }
             }
         }
+    }
+
+    private void safeRemove(String name){
+        int[] taskId = new int[1];
+        taskId[0] = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+            @Override
+            public void run() {
+                if(!lock){
+                    try{
+                        entityNames.remove(name);
+                        lock = false;
+                        Bukkit.getScheduler().cancelTask(taskId[0]);
+                    }catch (Exception e){
+                        lock = false;
+                    }
+
+                }
+            }
+        },0,0);
     }
 
 
@@ -123,7 +168,7 @@ public class HitEntityEvent implements Listener {
         }
 
         if(playerStrikes.get(player)>=2){
-            punishPlayer(player);
+            plugin.punishment.punishPlayer(player);
         }
         Bukkit.getScheduler().runTaskLater(plugin, () -> resetPlayersStrikes(player), 40L); //Resets the timer after 2 seconds.
     }
@@ -134,19 +179,6 @@ public class HitEntityEvent implements Listener {
         }else{
             playerStrikes.remove(player);
         }
-    }
-
-    private void punishPlayer(Player player){
-        FileConfiguration config = plugin.getConfig();
-        if(config.getBoolean("kick-player")){
-            player.kickPlayer(config.getString("kick-message"));
-        }else if(config.getBoolean("ban-player")){
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), String.format("ban %s %s",player.getName(), config.getString("ban-message").replace("&","§")));
-        }else if(config.getBoolean("tempban-player")){
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), String.format("tempban %s %ds %s",player.getName(), config.getInt("seconds"), config.getString("tempban-message").replace("&","§")));
-        }
-
-
     }
 
 
