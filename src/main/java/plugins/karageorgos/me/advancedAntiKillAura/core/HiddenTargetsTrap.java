@@ -83,7 +83,6 @@ public class HiddenTargetsTrap implements Listener {
         zombie.setAI(false);
         zombie.setSilent(true);
         zombie.setVisualFire(false);
-        zombie.setInvulnerable(true);
         zombie.setInvisible(true);
         zombie.setAdult();
         zombie.setMetadata("NoBurn", new FixedMetadataValue(plugin, true));

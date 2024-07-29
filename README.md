@@ -49,3 +49,7 @@ After making your changes, restart the server to apply them.
     
 
 `Note`: Players with op are ignored by the plugin.
+
+---
+
+Plugins current version: 2.1-Alpha

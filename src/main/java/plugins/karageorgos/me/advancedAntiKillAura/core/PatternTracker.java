@@ -54,28 +54,24 @@ public class PatternTracker implements Listener {
                 if(!locked){
                     locked = true;
 
-                    Long[] time = new Long[data.get(player).size()];
+                    ArrayList<Long> time = data.get(player);
 
-                    for(int i=0; i<time.length; i++){
-                        time[i] = data.get(player).get(i);
-                    }
-
-                    int failSafe = time.length%2;
+                    int failSafe = time.size()%2;
                     if(failSafe!=0){
                         locked = false;
                         Bukkit.getScheduler().cancelTask(taskId[0]);
                     }
 
-                    Double[] dataSeconds = new Double[time.length/2];
+                    Double[] dataSeconds = new Double[time.size()/2];
 
-                    int repeats = 0;
+
                     int next = 0;
                     String roundNumber;
                     double precentage = 0;
                     HashMap<Double, Integer> commons = new HashMap<Double, Integer>();
 
-                    for(int i=0; i<time.length-1; i=i+2){
-                        dataSeconds[next] = (Double) ((time[i+1] - time[i])/1000.0);
+                    for(int i=0; i<time.size()-1; i=i+2){
+                        dataSeconds[next] = (Double) ((time.get(i+1) - time.get(i))/1000.0);
                         roundNumber = String.format("%.2f", dataSeconds[next]);
                         dataSeconds[next] = Double.valueOf(roundNumber);
                         next++;
@@ -121,7 +117,7 @@ public class PatternTracker implements Listener {
                         for(Double d : dataSeconds){
                             System.out.println(d);
                         }
-                    }else if(time.length>50){
+                    }else if(time.size()>50){
                         data.get(player).clear();
                     }
 
