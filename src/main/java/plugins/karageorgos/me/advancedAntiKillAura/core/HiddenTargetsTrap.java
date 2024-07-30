@@ -2,7 +2,6 @@ package plugins.karageorgos.me.advancedAntiKillAura.core;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
@@ -15,7 +14,6 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.util.Vector;
 import plugins.karageorgos.me.advancedAntiKillAura.AdvancedAntiKillAura;
-import plugins.karageorgos.me.advancedAntiKillAura.helpers.Punishment;
 
 import java.util.ArrayList;
 import java.util.HashMap;

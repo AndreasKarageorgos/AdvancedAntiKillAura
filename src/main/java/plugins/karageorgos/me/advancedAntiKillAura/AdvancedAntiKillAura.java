@@ -14,7 +14,7 @@ import java.util.HashMap;
 
 public final class AdvancedAntiKillAura extends JavaPlugin {
 
-    public final String version = "2.1-Alpha";
+    public final String version = "2.2-Alpha";
     public final ArrayList<Player> players = new ArrayList<Player>();
     public final HashMap<Player, String> playersAndNames = new HashMap<Player,String>();
     public final ArrayList<String> entityNames = new ArrayList<String>();

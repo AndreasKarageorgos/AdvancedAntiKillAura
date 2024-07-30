@@ -38,7 +38,7 @@ public class PatternTracker implements Listener {
 
         safeAdd(player, System.currentTimeMillis());
         int size = data.get(player).size();
-        if((size>=14) && (size%2==0)){
+        if((size>=10) && (size%2==0)){
             calculateData(player);
         }
 
@@ -51,80 +51,90 @@ public class PatternTracker implements Listener {
         taskId[0] = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
             @Override
             public void run() {
-                if(!locked){
+                if(!locked) {
                     locked = true;
+                    try {
 
-                    ArrayList<Long> time = data.get(player);
 
-                    int failSafe = time.size()%2;
-                    if(failSafe!=0){
+                        Long[] time = new Long[data.get(player).size()];
+
+                        for (int i = 0; i < data.get(player).size(); i++) {
+                            time[i] = data.get(player).get(i);
+                        }
+
+                        int failSafe = time.length % 2;
+                        if (failSafe != 0) {
+                            locked = false;
+                            Bukkit.getScheduler().cancelTask(taskId[0]);
+                        }
+
+                        Double[] dataSeconds = new Double[time.length / 2];
+
+
+                        int next = 0;
+                        String roundNumber;
+                        double precentage = 0;
+                        HashMap<Double, Integer> commons = new HashMap<Double, Integer>();
+
+                        for (int i = 0; i < time.length - 1; i = i + 2) {
+                            dataSeconds[next] = (Double) ((time[i + 1] - time[i]) / 1000.0);
+                            roundNumber = String.format("%.2f", dataSeconds[next]);
+                            dataSeconds[next] = Double.valueOf(roundNumber);
+                            next++;
+                        }
+
+                        //Finding most common
+                        for (Double d : dataSeconds) {
+                            if (commons.containsKey(d)) {
+                                commons.replace(d, commons.get(d) + 1);
+                            } else {
+                                commons.put(d, 1);
+                            }
+                        }
+
+                        Double mostCommon = dataSeconds[0];
+                        int shows = commons.get(mostCommon);
+
+                        for (Double s : commons.keySet()) {
+                            if (commons.get(s) > shows) {
+                                shows = commons.get(s);
+                                mostCommon = s;
+                            }
+                        }
+
+
+                        int repeat = 0;
+                        for (int i = 0; i < dataSeconds.length - 1; i++) {
+                            if (Objects.equals(dataSeconds[i], mostCommon) && Objects.equals(dataSeconds[i], dataSeconds[i + 1])) {
+                                repeat++;
+                            }
+                        }
+
+                        precentage = 1.0 * repeat / dataSeconds.length * 100;
+                        //System.out.println("Precentage = " + precentage);
+                        if (precentage >= 80.0) {
+                            //System.out.println("Precentage2 = " + precentage);
+                            precentage = 1.0 * shows / dataSeconds.length * 100;
+
+                            if (precentage >= 75.0) {
+                                plugin.punishment.punishPlayer(player);
+                                data.remove(player);
+                            }
+                            /*
+                            for (Double d : dataSeconds) {
+                                System.out.println(d);
+                            }
+                             */
+                        }
+                        try {
+                            data.get(player).clear();
+                        } catch (NullPointerException ignored) {
+
+                        }
+                    }catch (Exception e){
                         locked = false;
                         Bukkit.getScheduler().cancelTask(taskId[0]);
                     }
-
-                    Double[] dataSeconds = new Double[time.size()/2];
-
-
-                    int next = 0;
-                    String roundNumber;
-                    double precentage = 0;
-                    HashMap<Double, Integer> commons = new HashMap<Double, Integer>();
-
-                    for(int i=0; i<time.size()-1; i=i+2){
-                        dataSeconds[next] = (Double) ((time.get(i+1) - time.get(i))/1000.0);
-                        roundNumber = String.format("%.2f", dataSeconds[next]);
-                        dataSeconds[next] = Double.valueOf(roundNumber);
-                        next++;
-                    }
-
-                    //Finding most common
-                    for(Double d : dataSeconds){
-                        if(commons.containsKey(d)){
-                            commons.replace(d, commons.get(d)+1);
-                        }else{
-                            commons.put(d,1);
-                        }
-                    }
-
-                    Double mostCommon = dataSeconds[0];
-                    int shows = commons.get(mostCommon);
-
-                    for(Double s : commons.keySet()){
-                        if(commons.get(s)>shows){
-                            shows = commons.get(s);
-                            mostCommon = s;
-                        }
-                    }
-
-
-                    int repeat = 0;
-                    for(int i=0; i<dataSeconds.length-1; i++){
-                        if(Objects.equals(dataSeconds[i], mostCommon) && Objects.equals(dataSeconds[i], dataSeconds[i + 1])){
-                            repeat++;
-                        }
-                    }
-
-                    precentage = 1.0 * repeat/dataSeconds.length * 100;
-
-                    if(precentage>=80.0){
-                        precentage = 1.0 * shows/dataSeconds.length * 100;
-
-                        if(precentage>=75.0){
-                            plugin.punishment.punishPlayer(player);
-                            data.remove(player);
-                        }
-
-                        for(Double d : dataSeconds){
-                            System.out.println(d);
-                        }
-                    }else if(time.size()>50){
-                        data.get(player).clear();
-                    }
-
-
-                    locked = false;
-                    Bukkit.getScheduler().cancelTask(taskId[0]);
-
                 }
             }
         },0,0);

@@ -52,4 +52,4 @@ After making your changes, restart the server to apply them.
 
 ---
 
-Plugins current version: 2.1-Alpha
+Plugins current version: 2.2-Alpha
